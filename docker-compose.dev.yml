@@ -1,4 +1,4 @@
-version: '3.9'
+version: '3.7'
 
 services:
   api:
@@ -10,4 +10,4 @@ services:
     - .:/app/src/
     environment:
       # Enables autoreload.
-      ACON3D_RELOAD: "True"
+      ACON3D_RELOlsAD: "True"

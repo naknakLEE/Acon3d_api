@@ -4,7 +4,7 @@ services:
   api:
     build:
       context: .
-      dockerfile: ./deploy/Dockerfile
+      dockerfile: ./build/Dockerfile
     image: acon3d:${ACON3D_VERSION:-latest}
     restart: always
     env_file:
