@@ -1,27 +1,32 @@
-from fastapi import APIRouter
+import pandas as pd
+import numpy as np
+
 from typing import Union
+from jose import JWTError, jwt
+from fastapi import Depends, HTTPException, status, Security, APIRouter
+from datetime import datetime, timedelta
+from passlib.context import CryptContext
+from fastapi.security import (
+    HTTPAuthorizationCredentials,
+    HTTPBearer,
+)
+
+from models.common import LoginForm, User, TokenData
+
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
+SECRET_KEY = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7"
+ALGORITHM = "HS256"
+
 
 router = APIRouter()
+
+
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 @router.get("/")
 def read_root():
     return {"Hello": "World"}
-
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from fastapi import Depends, FastAPI, HTTPException, status
-from passlib.context import CryptContext
-
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-from pydantic import BaseModel
-
-class User(BaseModel):
-    index: int
-    user_id: str
-    user_name: Union[str, None] = None
-    user_role: Union[str, None] = None
-    user_pwd: str
-
 
 
 def verify_password(plain_password, hashed_password):
@@ -55,17 +60,6 @@ def authenticate_user(db, username: str, password: str):
         return False
     return user
 
-from fastapi.security import (
-    HTTPAuthorizationCredentials,
-    HTTPBearer,
-)
-from datetime import datetime, timedelta
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
-from jose import JWTError, jwt
-import pandas as pd
-
-SECRET_KEY = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7"
-ALGORITHM = "HS256"
 
 
 def load_db():
@@ -76,7 +70,6 @@ def load_product_db():
     df = pd.read_csv ('../db/acon3d_db.csv')
     return df
 
-# oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 security = HTTPBearer()
 
 def create_access_token(data: dict, expires_delta: Union[timedelta, None] = None):
@@ -89,11 +82,10 @@ def create_access_token(data: dict, expires_delta: Union[timedelta, None] = None
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
-from fastapi import APIRouter, Depends, BackgroundTasks, Header, Security
 
 
-class TokenData(BaseModel):
-    username: Union[str, None] = None
+
+
 async def get_current_user(token: HTTPAuthorizationCredentials = Security(security)):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -113,15 +105,7 @@ async def get_current_user(token: HTTPAuthorizationCredentials = Security(securi
     if user is None:
         raise credentials_exception
     return user
-from fastapi import Form
-class LoginForm:
-    def __init__(
-        self,
-        username: str = Form(...),
-        password: str = Form(...)
-    ):
-        self.username = username
-        self.password = password
+
 
 
 @router.post("/token")
@@ -238,20 +222,9 @@ def put_product(
         return {"msg": "상품 업데이트 실패"}
     
     
-    
-import json
-import simplejson
 
-from fastapi.encoders import jsonable_encoder
-import orjson
 
-# class ORJSONResponse(JSONResponse):
-#     media_type = "application/json"
 
-#     def render(self, content) -> bytes:
-#         return orjson.dumps(content)
-
-import numpy as np
 @router.get("/list/product")
 def get_list_product():
     p_dao = load_product_db()
