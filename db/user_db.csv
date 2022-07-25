@@ -1,0 +1,5 @@
+index,user_role,user_name,user_id,user_pwd,created_at,is_used
+1,작가,작가1,writer1,1234,2022-07-26_00:21:00,TRUE
+2,에디터,에디터1,editor,5678,2022-07-26_00:21:00,TRUE
+3,작가,작가2,writer2,2345,2022-07-26_00:21:00,TRUE
+4,고객,고객1,client1,c1234,2022-07-26_00:21:00,TRUE
