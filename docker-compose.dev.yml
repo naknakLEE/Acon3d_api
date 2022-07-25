@@ -11,3 +11,5 @@ services:
     environment:
       # Enables autoreload.
       ACON3D_RELOlsAD: "True"
+    working_dir: /app/src/acon3d
+    entrypoint: uvicorn main:app --reload --host 0.0.0.0

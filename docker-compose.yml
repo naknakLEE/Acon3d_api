@@ -10,9 +10,6 @@ services:
     tty: true
     env_file:
       - .env
-    depends_on:
-      db:
-        condition: service_healthy
     environment:
       ACON3D_HOST: 0.0.0.0
       ACON3D_DB_HOST: acon3d-db
@@ -21,25 +18,3 @@ services:
       ACON3D_DB_PASS: acon3d
       ACON3D_DB_BASE: acon3d
     entrypoint: bash
-  db:
-    image: postgres:13.6-bullseye
-    hostname: acon3d-db
-    environment:
-      POSTGRES_PASSWORD: "acon3d"
-      POSTGRES_USER: "acon3d"
-      POSTGRES_DB: "acon3d"
-    volumes:
-      - acon3d-db-data:/var/lib/postgresql/data
-    restart: always
-    healthcheck:
-      test: pg_isready -U acon3d
-      interval: 2s
-      timeout: 3s
-      retries: 40
-
-
-
-volumes:
-  acon3d-db-data:
-    name: acon3d-db-data
-
