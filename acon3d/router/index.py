@@ -113,11 +113,20 @@ async def get_current_user(token: HTTPAuthorizationCredentials = Security(securi
     if user is None:
         raise credentials_exception
     return user
+from fastapi import Form
+class LoginForm:
+    def __init__(
+        self,
+        username: str = Form(...),
+        password: str = Form(...)
+    ):
+        self.username = username
+        self.password = password
 
 
 @router.post("/token")
 def post_product(
-    form_data: OAuth2PasswordRequestForm = Depends(),
+    form_data: LoginForm = Depends(),
     user_db = Depends(load_db)
 ):
     user = authenticate_user(user_db, form_data.username, form_data.password)
