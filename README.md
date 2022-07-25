@@ -2,6 +2,10 @@
 
 This project was generated using fastapi_template.
 
+
+## 사전 install
+docker
+docker-compose
 ## Poetry
 
 This project uses poetry. It's a modern dependency management

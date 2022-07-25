@@ -1,0 +1,6 @@
+uvicorn[standard]
+fastapi
+yarl
+sqlalchemy
+loguru
+asyncpg

@@ -7,6 +7,7 @@ services:
       dockerfile: ./build/Dockerfile
     image: acon3d:${ACON3D_VERSION:-latest}
     restart: always
+    tty: true
     env_file:
       - .env
     depends_on:
@@ -19,6 +20,7 @@ services:
       ACON3D_DB_USER: acon3d
       ACON3D_DB_PASS: acon3d
       ACON3D_DB_BASE: acon3d
+    entrypoint: bash
   db:
     image: postgres:13.6-bullseye
     hostname: acon3d-db
