@@ -4,3 +4,8 @@ yarl
 sqlalchemy
 loguru
 asyncpg
+passlib
+python-multipart
+bcrypt
+python-jose
+pandas
