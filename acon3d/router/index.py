@@ -163,7 +163,8 @@ def post_product(
     'product_name' : product_name,
     'title_kr' : title_kr,
     'content_kr' : content_kr,
-    "user_index" : int(user.index)
+    "user_index" : int(user.index),
+    "status": "검토 요청"
     }
     p_dao = p_dao.append(new_data, ignore_index=True)
     if insert_db(p_dao):
@@ -171,7 +172,25 @@ def post_product(
 
 @router.get("/product")
 def get_product(user: str = Depends(get_current_user)):
-    return {"Hello": "World"}
+    if user.user_role != '에디터':
+        return {"msg": "에디터 권한이 없습니다."}
+    p_dao = load_product_db()
+    p_dao = p_dao.loc[p_dao['status'] == "검토 요청"]
+    print("체크")
+    print(p_dao)
+    
+    res = {}
+    
+    rows = []
+    
+    for index, row in p_dao.iterrows():
+        rows.append({'product_name' : row['product_name'],
+                    'title_kr' : row['title_kr'],
+                    'content_kr' : row['content_kr'],
+                    'user_index' : row['user_index'],
+                    'status' : row['status'],})
+    res["msg"] = rows
+    return res
 
 @router.put("/product")
 def put_product(user: str = Depends(get_current_user)):
