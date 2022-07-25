@@ -16,6 +16,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 from pydantic import BaseModel
 
 class User(BaseModel):
+    index: int
     user_id: str
     user_name: Union[str, None] = None
     user_role: Union[str, None] = None
@@ -37,11 +38,13 @@ def get_user(db, username: str):
         user_name = db['user_name'].to_string(index = False)
         user_pwd = db['user_pwd'].to_string(index = False)
         user_role = db['user_role'].to_string(index = False)
+        index = db['index'].to_string(index = False)
         return User(
             user_id = user_id,
             user_name = user_name,
             user_pwd = user_pwd,
-            user_role = user_role
+            user_role = user_role,
+            index = index
             )
 
 def authenticate_user(db, username: str, password: str):
@@ -68,6 +71,11 @@ ALGORITHM = "HS256"
 def load_db():
     df = pd.read_csv ('../db/user_db.csv')
     return df
+
+def load_product_db():
+    df = pd.read_csv ('../db/acon3d_db.csv')
+    return df
+
 # oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 security = HTTPBearer()
 
@@ -125,9 +133,41 @@ def post_product(
     )
     return {"access_token": access_token, "token_type": "bearer"}
 
+
+
+def insert_db(data_df_2):
+    try:
+        data_df_2.to_csv('../db/acon3d_db.csv',
+            sep=',',
+            na_rep='NaN',
+            float_format = '%.2f',
+            index = False)
+        return True
+    except:
+        return False
+    
+
 @router.post("/product")
-def post_product(user: str = Depends(get_current_user)):
-    return {"Hello": "World"}
+def post_product(
+    product_name: str,
+    title_kr: str, 
+    content_kr: str, 
+    user: str = Depends(get_current_user)
+    ):
+    
+    if user.user_role != '작가':
+        return {"msg": "작가 권한이 없습니다."}
+    p_dao = load_product_db()
+    
+    new_data = {
+    'product_name' : product_name,
+    'title_kr' : title_kr,
+    'content_kr' : content_kr,
+    "user_index" : int(user.index)
+    }
+    p_dao = p_dao.append(new_data, ignore_index=True)
+    if insert_db(p_dao):
+        return {"msg": "상품 등록 성공"}
 
 @router.get("/product")
 def get_product(user: str = Depends(get_current_user)):
