@@ -167,6 +167,7 @@ def post_product(
     "status": "검토 요청"
     }
     p_dao = p_dao.append(new_data, ignore_index=True)
+    p_dao = p_dao.reset_index(level=0)
     if insert_db(p_dao):
         return {"msg": "상품 등록 성공"}
 
@@ -194,4 +195,6 @@ def get_product(user: str = Depends(get_current_user)):
 
 @router.put("/product")
 def put_product(user: str = Depends(get_current_user)):
+    if user.user_role != '에디터':
+        return {"msg": "에디터 권한이 없습니다."}
     return {"Hello": "World"}
