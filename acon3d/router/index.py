@@ -52,7 +52,10 @@ def authenticate_user(db, username: str, password: str):
         return False
     return user
 
-
+from fastapi.security import (
+    HTTPAuthorizationCredentials,
+    HTTPBearer,
+)
 from datetime import datetime, timedelta
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 from jose import JWTError, jwt
@@ -65,8 +68,8 @@ ALGORITHM = "HS256"
 def load_db():
     df = pd.read_csv ('../db/user_db.csv')
     return df
-
-
+# oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+security = HTTPBearer()
 
 def create_access_token(data: dict, expires_delta: Union[timedelta, None] = None):
     to_encode = data.copy()
@@ -77,6 +80,31 @@ def create_access_token(data: dict, expires_delta: Union[timedelta, None] = None
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
+
+from fastapi import APIRouter, Depends, BackgroundTasks, Header, Security
+
+
+class TokenData(BaseModel):
+    username: Union[str, None] = None
+async def get_current_user(token: HTTPAuthorizationCredentials = Security(security)):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token.credentials, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")
+        if username is None:
+            raise credentials_exception
+        token_data = TokenData(username=username)
+    except JWTError:
+        raise credentials_exception
+    db = load_db()
+    user = get_user(db, username=token_data.username)
+    if user is None:
+        raise credentials_exception
+    return user
 
 
 @router.post("/token")
@@ -98,13 +126,13 @@ def post_product(
     return {"access_token": access_token, "token_type": "bearer"}
 
 @router.post("/product")
-def post_product():
+def post_product(user: str = Depends(get_current_user)):
     return {"Hello": "World"}
 
 @router.get("/product")
-def get_product():
+def get_product(user: str = Depends(get_current_user)):
     return {"Hello": "World"}
 
 @router.put("/product")
-def put_product():
+def put_product(user: str = Depends(get_current_user)):
     return {"Hello": "World"}
