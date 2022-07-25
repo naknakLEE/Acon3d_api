@@ -1,13 +1,12 @@
-import pandas as pd
+
 import numpy as np
 
 from typing import Union
 from jose import JWTError, jwt
-from fastapi import Depends, HTTPException, status, Security, APIRouter
+from fastapi import Depends, HTTPException, status, APIRouter
 from datetime import datetime, timedelta
 from passlib.context import CryptContext
 from fastapi.security import (
-    HTTPAuthorizationCredentials,
     HTTPBearer,
 )
 
@@ -16,6 +15,7 @@ from utils.auth import (
     create_access_token, 
     get_current_user)
 from models.common import LoginForm, User, TokenData
+from utils.db_connection import load_db, insert_db, load_product_db
 
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
@@ -26,20 +26,6 @@ security = HTTPBearer()
 @router.get("/")
 def read_root():
     return {"Hello": "World"}
-
-
-def load_db():
-    df = pd.read_csv ('../db/user_db.csv')
-    return df
-
-def load_product_db():
-    df = pd.read_csv ('../db/acon3d_db.csv')
-    return df
-
-
-
-
-
 
 
 @router.post("/token")
@@ -62,17 +48,6 @@ def post_product(
 
 
 
-def insert_db(data_df_2):
-    try:
-        data_df_2.to_csv('../db/acon3d_db.csv',
-            sep=',',
-            na_rep='NaN',
-            float_format = '%.2f',
-            index = False)
-        return True
-    except:
-        return False
-    
 
 @router.post("/product")
 def post_product(
@@ -107,9 +82,7 @@ def get_product(user: str = Depends(get_current_user)):
     p_dao = p_dao.loc[p_dao['status'] == "검토 요청"]
     
     res = {}
-    
     rows = []
-    
     for index, row in p_dao.iterrows():
         rows.append({'product_index' : row['index'],
                     'product_name' : row['product_name'],
@@ -149,25 +122,19 @@ def put_product(
     p_dao.at[product_index,'price']=price
     p_dao.at[product_index,'tax']=tax
     p_dao.at[product_index,'status']="검토 완료"
-    
     if insert_db(p_dao):
         return {"msg": "상품 등록 성공"}
     else:
         return {"msg": "상품 업데이트 실패"}
     
-    
-
 
 
 @router.get("/list/product")
 def get_list_product():
     p_dao = load_product_db()
     p_dao = p_dao.loc[p_dao['status'] == "검토 완료"]
-    
     res = {}
-    
     rows = []
-    
     for index, row in p_dao.iterrows():
         row = row.replace(np.nan,0)
         rows.append({'product_index' : row['index'],
